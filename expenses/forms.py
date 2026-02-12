@@ -22,13 +22,14 @@ class ExpenseForm(forms.ModelForm):
     """Expense creation and edit form"""
     class Meta:
         model = Expense
-        fields = ['title', 'amount', 'category', 'transaction_type', 'payment_method', 'date', 'description']
+        fields = ['title', 'amount', 'category', 'transaction_type', 'payment_method', 'payee_username', 'date', 'description']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Grocery shopping'}),
             'amount': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.01'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
             'transaction_type': forms.Select(attrs={'class': 'form-control'}),
             'payment_method': forms.Select(attrs={'class': 'form-control'}),
+            'payee_username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional: Payee username'}),
             'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Optional notes...'}),
         }

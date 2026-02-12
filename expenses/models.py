@@ -24,6 +24,7 @@ class Expense(models.Model):
     TRANSACTION_TYPE_CHOICES = [
         ('EXPENSE', 'Expense'),
         ('RECEIVABLE', 'Receivable'),
+        ('PAYABLE', 'Payable'),
     ]
     
     PAYMENT_METHOD_CHOICES = [
@@ -41,6 +42,8 @@ class Expense(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='expenses')
     transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPE_CHOICES, default='EXPENSE')
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='CASH')
+    payee_username = models.CharField(max_length=150, blank=True, null=True, help_text="Username of the person who owes you")
+    related_receivable = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='payables')
     date = models.DateField(default=timezone.now)
     description = models.TextField(blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='expenses')
@@ -52,3 +55,19 @@ class Expense(models.Model):
 
     def __str__(self):
         return f"{self.title} - ${self.amount}"
+
+
+class Notification(models.Model):
+    """Notification model for payment reminders"""
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_reminders')
+    expense = models.ForeignKey(Expense, on_delete=models.CASCADE)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Reminder to {self.recipient.username} from {self.sender.username}"

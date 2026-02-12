@@ -1,12 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
+from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib import messages
 from django.db.models import Sum, Count
 from django.db.models.functions import TruncMonth
 from datetime import datetime, timedelta
-from .models import Expense, Category
+from .models import Expense, Category, Notification
 from .forms import UserRegisterForm, ExpenseForm, CategoryForm
 
 
@@ -39,26 +40,27 @@ def register(request):
         form = UserRegisterForm()
     return render(request, 'registration/register.html', {'form': form})
 
-
 @login_required
 def dashboard(request):
     """Dashboard view with expense statistics"""
     user_expenses = Expense.objects.filter(user=request.user)
     
     # Calculate statistics
-    total_expenses = user_expenses.filter(transaction_type='EXPENSE').aggregate(total=Sum('amount'))['total'] or 0
+    total_expenses_direct = user_expenses.filter(transaction_type='EXPENSE').aggregate(total=Sum('amount'))['total'] or 0
+    total_payables = user_expenses.filter(transaction_type='PAYABLE').aggregate(total=Sum('amount'))['total'] or 0
+    total_expenses = total_expenses_direct + total_payables
     total_receivables = user_expenses.filter(transaction_type='RECEIVABLE').aggregate(total=Sum('amount'))['total'] or 0
     
     # Current month expenses
     today = datetime.now()
     month_start = today.replace(day=1)
     month_expenses = user_expenses.filter(
-        transaction_type='EXPENSE',
+        transaction_type__in=['EXPENSE', 'PAYABLE'],
         date__gte=month_start
     ).aggregate(total=Sum('amount'))['total'] or 0
     
     # Category breakdown (Expenses only)
-    category_stats = user_expenses.filter(transaction_type='EXPENSE').values('category__name', 'category__icon', 'category__color').annotate(
+    category_stats = user_expenses.filter(transaction_type__in=['EXPENSE', 'PAYABLE']).values('category__name', 'category__icon', 'category__color').annotate(
         total=Sum('amount'),
         count=Count('id')
     ).order_by('-total')[:6]
@@ -69,21 +71,26 @@ def dashboard(request):
     # Monthly trend (last 6 months - Expenses only)
     six_months_ago = today - timedelta(days=180)
     monthly_data = user_expenses.filter(
-        transaction_type='EXPENSE',
+        transaction_type__in=['EXPENSE', 'PAYABLE'],
         date__gte=six_months_ago
     ).annotate(
         month=TruncMonth('date')
     ).values('month').annotate(total=Sum('amount')).order_by('month')
     
+    # Notifications
+    unread_notifications_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
+    
     context = {
         'total_expenses': total_expenses,
+        'total_payables': total_payables,
         'total_receivables': total_receivables,
         'month_expenses': month_expenses,
         'category_stats': category_stats,
         'recent_expenses': recent_expenses,
         'monthly_data': monthly_data,
-        'expense_count': user_expenses.filter(transaction_type='EXPENSE').count(),
+        'expense_count': user_expenses.filter(transaction_type__in=['EXPENSE', 'PAYABLE']).count(),
         'receivable_count': user_expenses.filter(transaction_type='RECEIVABLE').count(),
+        'unread_notifications_count': unread_notifications_count,
     }
     return render(request, 'expenses/dashboard.html', context)
 
@@ -109,6 +116,7 @@ def expense_list(request):
         expenses = expenses.filter(title__icontains=search)
     
     categories = Category.objects.filter(user=request.user)
+    unread_notifications_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
     
     context = {
         'expenses': expenses,
@@ -119,8 +127,67 @@ def expense_list(request):
         'selected_type': transaction_type,
         'selected_payment': payment_method,
         'search_query': search or '',
+        'unread_notifications_count': unread_notifications_count,
     }
     return render(request, 'expenses/expense_list.html', context)
+
+# ... (expense_create, csv, update, delete views)
+
+@login_required
+def send_reminder(request, pk):
+    """Send a payment reminder notification to another user"""
+    expense = get_object_or_404(Expense, pk=pk, user=request.user, transaction_type='RECEIVABLE')
+    
+    if not expense.payee_username:
+        messages.error(request, "This receivable doesn't have a target username.")
+        return redirect('expense_list')
+    
+    try:
+        recipient = User.objects.get(username=expense.payee_username)
+        if recipient == request.user:
+            messages.error(request, "You cannot send a reminder to yourself.")
+            return redirect('expense_list')
+            
+        # Create or update Payable for recipient
+        payable, created = Expense.objects.get_or_create(
+            user=recipient,
+            related_receivable=expense,
+            defaults={
+                'title': f"Payable: {expense.title} (to {request.user.username})",
+                'amount': expense.amount,
+                'category': None, # Let them categorize it if they want
+                'transaction_type': 'PAYABLE',
+                'date': expense.date,
+                'payment_method': expense.payment_method,
+            }
+        )
+        
+        Notification.objects.create(
+            recipient=recipient,
+            sender=request.user,
+            expense=expense,
+            message=f"Hey {recipient.username}, friendly reminder to pay ${expense.amount} for '{expense.title}' to {request.user.username}. I've added this as a 'Payable' in your tracker."
+        )
+        messages.success(request, f"Reminder sent and Payable created for {recipient.username}!")
+    except User.DoesNotExist:
+        messages.error(request, f"User '{expense.payee_username}' not found in the system.")
+        
+    return redirect('expense_list')
+
+
+@login_required
+def notification_list(request):
+    """View to see all received reminders"""
+    notifications = Notification.objects.filter(recipient=request.user)
+    unread_notifications_count = notifications.filter(is_read=False).count()
+    
+    # Mark all as read when they view the list
+    notifications.filter(is_read=False).update(is_read=True)
+    
+    return render(request, 'expenses/notifications.html', {
+        'notifications': notifications,
+        'unread_notifications_count': 0 # Reset count since they are reading them
+    })
 
 
 @login_required

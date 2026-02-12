@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1 class="page-title">Notifications</h1>
+</div>
+
+<div class="card">
+    {% if notifications %}
+    <div class="notification-list">
+        {% for notification in notifications %}
+        <div class="notification-item {% if not notification.is_read %}unread{% endif %}"
+            style="padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: flex-start; gap: 1rem;">
+            <div class="notification-icon" style="font-size: 1.5rem;">🛎️</div>
+            <div class="notification-content" style="flex: 1;">
+                <p style="margin: 0; font-weight: 500;">{{ notification.message }}</p>
+                <small style="color: rgba(255,255,255,0.6);">{{ notification.created_at|timesince }} ago</small>
+            </div>
+            {% if not notification.is_read %}
+            <div class="unread-dot" style="width: 8px; height: 8px; background: #6366f1; border-radius: 50%;"></div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="padding: 3rem; text-align: center; color: rgba(255,255,255,0.6);">
+        <p style="font-size: 3rem; margin-bottom: 1rem;">📭</p>
+        <p>No notifications yet.</p>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .notification-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .notification-item.unread {
+        background: rgba(99, 102, 241, 0.05);
+    }
+</style>
+{% endblock %}

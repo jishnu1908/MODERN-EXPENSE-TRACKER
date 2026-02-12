@@ -23,15 +23,29 @@
                     class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                     <span>📊</span> Dashboard
                 </a>
-                <a href="{% url 'expense_list' %}"
-                    class="nav-link {% if 'expense' in request.resolver_match.url_name %}active{% endif %}">
+                <a href="{% url 'expense_list' %}?type=EXPENSE"
+                    class="nav-link {% if request.resolver_match.url_name == 'expense_list' and request.GET.type == 'EXPENSE' %}active{% endif %}">
                     <span>💳</span> Expenses
+                </a>
+                <a href="{% url 'expense_list' %}?type=RECEIVABLE"
+                    class="nav-link {% if request.resolver_match.url_name == 'expense_list' and request.GET.type == 'RECEIVABLE' %}active{% endif %}">
+                    <span>📥</span> Receivables
                 </a>
                 <a href="{% url 'category_list' %}"
                     class="nav-link {% if 'category' in request.resolver_match.url_name %}active{% endif %}">
                     <span>📁</span> Categories
                 </a>
                 <div class="nav-user">
+                    <a href="{% url 'notification_list' %}" class="nav-link"
+                        style="position: relative; padding: 0.5rem;">
+                        <span>🛎️</span>
+                        {% if unread_notifications_count %}
+                        <span class="notification-badge"
+                            style="position: absolute; top: 0; right: 0; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; border: 2px solid var(--navbar-bg);">
+                            {{ unread_notifications_count }}
+                        </span>
+                        {% endif %}
+                    </a>
                     <span class="user-name">👤 {{ user.username }}</span>
                     <a href="{% url 'logout' %}" class="btn-logout">Logout</a>
                 </div>

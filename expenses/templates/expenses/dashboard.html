@@ -14,21 +14,29 @@
 
     <!-- Stats Grid -->
     <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
-        <div class="stat-card" style="border-left-color: #6366f1;">
+        <a href="{% url 'expense_list' %}?type=EXPENSE" class="stat-card"
+            style="border-left-color: #6366f1; text-decoration: none; display: block;">
             <div class="stat-icon">💰</div>
             <div class="stat-label">Total Expenses</div>
             <div class="stat-value">${{ total_expenses|floatformat:2 }}</div>
-        </div>
+        </a>
         <div class="stat-card" style="border-left-color: #ec4899;">
             <div class="stat-icon">📅</div>
             <div class="stat-label">This Month</div>
             <div class="stat-value">${{ month_expenses|floatformat:2 }}</div>
         </div>
-        <div class="stat-card" style="border-left-color: #10b981;">
+        <a href="{% url 'expense_list' %}?type=RECEIVABLE" class="stat-card"
+            style="border-left-color: #10b981; text-decoration: none; display: block;">
             <div class="stat-icon">📥</div>
             <div class="stat-label">Receivables</div>
             <div class="stat-value">${{ total_receivables|floatformat:2 }}</div>
-        </div>
+        </a>
+        <a href="{% url 'expense_list' %}?type=PAYABLE" class="stat-card"
+            style="border-left-color: #ef4444; text-decoration: none; display: block;">
+            <div class="stat-icon">📤</div>
+            <div class="stat-label">Payables</div>
+            <div class="stat-value">${{ total_payables|floatformat:2 }}</div>
+        </a>
         <div class="stat-card" style="border-left-color: #f59e0b;">
             <div class="stat-icon">📝</div>
             <div class="stat-label">Total Entries</div>
@@ -37,19 +45,17 @@
     </div>
 
     <!-- Charts and Recent Expenses -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
-        <!-- Category Breakdown -->
-        <div class="card">
+    <div class="dashboard-grid"
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <div class="card chart-card">
             <h2 class="card-title">Category Breakdown</h2>
-            <div style="max-height: 300px;">
+            <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
                 <canvas id="categoryChart"></canvas>
             </div>
         </div>
-
-        <!-- Monthly Trend -->
-        <div class="card">
+        <div class="card chart-card">
             <h2 class="card-title">Monthly Trend</h2>
-            <div style="max-height: 300px;">
+            <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
                 <canvas id="monthlyChart"></canvas>
             </div>
         </div>
@@ -58,7 +64,7 @@
     <!-- Recent Expenses -->
     <div class="card">
         <div class="card-header">
-            <h2 class="card-title">Recent Expenses</h2>
+            <h2 class="card-title">Recent Transactions</h2>
             <a href="{% url 'expense_list' %}" class="btn btn-primary">View All</a>
         </div>
         {% if recent_expenses %}
@@ -67,7 +73,7 @@
                 <tr>
                     <th>Date</th>
                     <th>Title</th>
-                    <th>Category</th>
+                    <th>Type</th>
                     <th>Amount</th>
                 </tr>
             </thead>
@@ -77,25 +83,30 @@
                     <td>{{ expense.date|date:"M d, Y" }}</td>
                     <td>{{ expense.title }}</td>
                     <td>
-                        <span class="category-badge"
-                            style="background-color: {{ expense.category.color }}22; color: {{ expense.category.color }};">
-                            {{ expense.category }}
+                        <span class="type-badge {{ expense.transaction_type|lower }}">
+                            {{ expense.get_transaction_type_display }}
                         </span>
                     </td>
-                    <td style="font-weight: 700; color: var(--danger);">${{ expense.amount }}</td>
+                    <td
+                        style="font-weight: 700; color: {% if expense.transaction_type == 'EXPENSE' or expense.transaction_type == 'PAYABLE' %}var(--danger){% else %}var(--success){% endif %};">
+                        ${{ expense.amount }}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
         {% else %}
-        <p style="text-align: center; color: var(--gray); padding: 2rem;">No expenses yet. Start tracking your spending!
-        </p>
+        <div style="padding: 2rem; text-align: center; color: rgba(255,255,255,0.6);">
+            No transactions yet.
+        </div>
         {% endif %}
     </div>
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     // Category Chart
     const categoryCtx = document.getElementById('categoryChart').getContext('2d');
@@ -104,6 +115,7 @@
     datasets: [{
         data: [{% for cat in category_stats %}{{ cat.total }}{% if not forloop.last %}, {% endif %} {% endfor %}],
     backgroundColor: [{% for cat in category_stats %}'{{ cat.category__color }}'{% if not forloop.last %}, {% endif %} {% endfor %}],
+    borderWidth: 0
         }]
     };
     new Chart(categoryCtx, {
@@ -111,10 +123,11 @@
         data: categoryData,
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     position: 'bottom',
+                    labels: { color: 'white' }
                 }
             }
         }
@@ -138,15 +151,19 @@
         data: monthlyData,
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    display: false,
-                }
+                legend: { display: false }
             },
             scales: {
                 y: {
                     beginAtZero: true,
+                    ticks: { color: 'rgba(255,255,255,0.6)' },
+                    grid: { color: 'rgba(255,255,255,0.1)' }
+                },
+                x: {
+                    ticks: { color: 'rgba(255,255,255,0.6)' },
+                    grid: { display: false }
                 }
             }
         }

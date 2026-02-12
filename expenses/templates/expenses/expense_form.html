@@ -10,7 +10,7 @@
         <form method="post">
             {% csrf_token %}
             {% for field in form %}
-            <div class="form-group">
+            <div class="form-group" id="group-{{ field.name }}">
                 <label class="form-label">{{ field.label }}</label>
                 {{ field }}
                 {% if field.help_text %}
@@ -25,11 +25,31 @@
             {% endfor %}
 
             <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                <button type="submit" class="btn btn-success" style="flex: 1;">Save Expense</button>
+                <button type="submit" class="btn btn-success" style="flex: 1;">Save Transaction</button>
                 <a href="{% url 'expense_list' %}" class="btn btn-secondary"
                     style="flex: 1; justify-content: center;">Cancel</a>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const typeSelect = document.querySelector('select[name="transaction_type"]');
+        const payeeGroup = document.getElementById('group-payee_username');
+
+        function togglePayeeField() {
+            if (typeSelect.value === 'RECEIVABLE') {
+                payeeGroup.style.display = 'block';
+            } else {
+                payeeGroup.style.display = 'none';
+            }
+        }
+
+        if (typeSelect && payeeGroup) {
+            typeSelect.addEventListener('change', togglePayeeField);
+            togglePayeeField(); // Initial check
+        }
+    });
+</script>
 {% endblock %}

@@ -141,6 +141,7 @@ body {
         opacity: 0;
         transform: translateY(-20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -414,11 +415,11 @@ body {
         flex-wrap: wrap;
         gap: 0.5rem;
     }
-    
+
     .stats-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .table {
         font-size: 0.875rem;
     }
@@ -430,6 +431,7 @@ body {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -438,4 +440,59 @@ body {
 
 .fade-in {
     animation: fadeIn 0.5s ease;
+}
+
+/* Transaction Type Badges */
+.type-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 2rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.type-badge.expense {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+.type-badge.receivable {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.notification-badge {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-outline-primary {
+    background: transparent;
+    border: 1px solid var(--primary);
+    color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-outline-danger {
+    background: transparent;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+}
+
+.btn-outline-danger:hover {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+.actions {
+    display: flex;
+    gap: 0.5rem;
 }

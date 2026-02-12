@@ -17,6 +17,10 @@ urlpatterns = [
     path('expenses/export/', views.export_expenses_csv, name='export_expenses_csv'),
     path('expenses/<int:pk>/edit/', views.expense_update, name='expense_update'),
     path('expenses/<int:pk>/delete/', views.expense_delete, name='expense_delete'),
+    path('expenses/<int:pk>/remind/', views.send_reminder, name='send_reminder'),
+    
+    # Notifications
+    path('notifications/', views.notification_list, name='notification_list'),
     
     # Categories
     path('categories/', views.category_list, name='category_list'),
