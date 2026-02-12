@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="brand-icon" style="text-align: center; font-size: 4rem; margin-bottom: 1rem;">💰</div>
+        <h1 class="auth-title">Welcome Back</h1>
+        <p class="auth-subtitle">Sign in to manage your expenses</p>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                {{ form.username }}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                {{ form.password }}
+            </div>
+
+            {% if form.errors %}
+            <div class="alert alert-error">
+                Invalid username or password. Please try again.
+            </div>
+            {% endif %}
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                Login
+            </button>
+        </form>
+
+        <p class="auth-link">
+            Don't have an account? <a href="{% url 'register' %}">Register here</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

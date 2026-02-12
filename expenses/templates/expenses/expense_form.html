@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card" style="max-width: 600px; margin: 0 auto;">
+        <h1 class="card-title">{{ title }}</h1>
+
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <label class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                <small style="color: var(--gray); font-size: 0.875rem;">{{ field.help_text }}</small>
+                {% endif %}
+                {% if field.errors %}
+                <div style="color: var(--danger); font-size: 0.875rem; margin-top: 0.25rem;">
+                    {{ field.errors.0 }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn btn-success" style="flex: 1;">Save Expense</button>
+                <a href="{% url 'expense_list' %}" class="btn btn-secondary"
+                    style="flex: 1; justify-content: center;">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

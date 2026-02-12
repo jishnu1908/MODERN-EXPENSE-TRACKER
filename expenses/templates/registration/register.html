@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="brand-icon" style="text-align: center; font-size: 4rem; margin-bottom: 1rem;">💰</div>
+        <h1 class="auth-title">Create Account</h1>
+        <p class="auth-subtitle">Start tracking your expenses today</p>
+        
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <label class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                <div style="color: var(--danger); font-size: 0.875rem; margin-top: 0.25rem;">
+                    {{ field.errors.0 }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <button type="submit" class="btn btn-success" style="width: 100%; justify-content: center;">
+                Create Account
+            </button>
+        </form>
+        
+        <p class="auth-link">
+            Already have an account? <a href="{% url 'login' %}">Login here</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

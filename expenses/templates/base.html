@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Expense Tracker{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    {% if user.is_authenticated %}
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <span class="brand-icon">💰</span>
+                <span class="brand-text">Expense Tracker</span>
+            </div>
+            <div class="nav-links">
+                <a href="{% url 'dashboard' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <span>📊</span> Dashboard
+                </a>
+                <a href="{% url 'expense_list' %}"
+                    class="nav-link {% if 'expense' in request.resolver_match.url_name %}active{% endif %}">
+                    <span>💳</span> Expenses
+                </a>
+                <a href="{% url 'category_list' %}"
+                    class="nav-link {% if 'category' in request.resolver_match.url_name %}active{% endif %}">
+                    <span>📁</span> Categories
+                </a>
+                <div class="nav-user">
+                    <span class="user-name">👤 {{ user.username }}</span>
+                    <a href="{% url 'logout' %}" class="btn-logout">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <main class="main-content">
+        {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Categories - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title">📁 Categories</h1>
+            <a href="{% url 'category_create' %}" class="btn btn-success">+ Add Category</a>
+        </div>
+
+        {% if categories %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
+            {% for category in categories %}
+            <div class="card"
+                style="text-align: center; border-left: 4px solid {{ category.color }}; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="font-size: 3rem; margin-bottom: 0.5rem;">{{ category.icon }}</div>
+                    <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">{{ category.name }}</h3>
+                    <p style="color: var(--gray); font-size: 0.875rem;">
+                        {{ category.expenses.count }} expense{{ category.expenses.count|pluralize }}
+                    </p>
+                </div>
+                <div style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: center;">
+                    <a href="{% url 'category_update' category.pk %}" class="btn btn-primary"
+                        style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">Edit</a>
+                    <a href="{% url 'category_delete' category.pk %}" class="btn btn-danger"
+                        style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">Delete</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="text-align: center; color: var(--gray); padding: 3rem;">
+            No categories yet. <a href="{% url 'category_create' %}"
+                style="color: var(--primary); font-weight: 600;">Create your first category</a>
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

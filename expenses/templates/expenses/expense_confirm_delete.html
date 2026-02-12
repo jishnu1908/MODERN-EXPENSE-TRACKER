@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Expense - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card" style="max-width: 500px; margin: 0 auto;">
+        <h1 class="card-title" style="color: var(--danger);">⚠️ Delete Expense</h1>
+
+        <p style="font-size: 1.125rem; margin: 1.5rem 0;">
+            Are you sure you want to delete this expense?
+        </p>
+
+        <div style="background: var(--light); padding: 1rem; border-radius: 0.5rem; margin: 1.5rem 0;">
+            <p><strong>Title:</strong> {{ expense.title }}</p>
+            <p><strong>Amount:</strong> ${{ expense.amount }}</p>
+            <p><strong>Category:</strong> {{ expense.category }}</p>
+            <p><strong>Date:</strong> {{ expense.date|date:"M d, Y" }}</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div style="display: flex; gap: 1rem;">
+                <button type="submit" class="btn btn-danger" style="flex: 1;">Yes, Delete</button>
+                <a href="{% url 'expense_list' %}" class="btn btn-secondary"
+                    style="flex: 1; justify-content: center;">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

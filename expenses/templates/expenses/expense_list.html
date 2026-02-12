@@ -1,0 +1,106 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Expenses - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title">💳 Transactions</h1>
+            <div style="display: flex; gap: 1rem;">
+                <a href="{% url 'export_expenses_csv' %}" class="btn btn-primary">📥 Export CSV</a>
+                <a href="{% url 'expense_create' %}" class="btn btn-success">+ Add Transaction</a>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <form method="get" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+            <input type="text" name="search" class="form-control" placeholder="Search transactions..."
+                value="{{ search_query }}" style="flex: 2; min-width: 200px;">
+
+            <select name="type" class="form-control" style="flex: 1; min-width: 140px;" onchange="this.form.submit()">
+                <option value="">All Types</option>
+                {% for val, label in transaction_types %}
+                <option value="{{ val }}" {% if selected_type == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="category" class="form-control" style="flex: 1; min-width: 140px;"
+                onchange="this.form.submit()">
+                <option value="">All Categories</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>{{ category }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="payment_method" class="form-control" style="flex: 1; min-width: 140px;"
+                onchange="this.form.submit()">
+                <option value="">All Payments</option>
+                {% for val, label in payment_methods %}
+                <option value="{{ val }}" {% if selected_payment == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+
+        {% if expenses %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Category</th>
+                    <th>Payment</th>
+                    <th>Amount</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for expense in expenses %}
+                <tr>
+                    <td>{{ expense.date|date:"M d, Y" }}</td>
+                    <td>
+                        <strong>{{ expense.title }}</strong>
+                        {% if expense.description %}
+                        <br><small style="color: var(--gray);">{{ expense.description|truncatewords:10 }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span
+                            style="font-weight: 600; color: {% if expense.transaction_type == 'EXPENSE' %}var(--danger){% else %}var(--success){% endif %};">
+                            {{ expense.get_transaction_type_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="category-badge"
+                            style="background-color: {{ expense.category.color }}22; color: {{ expense.category.color }};">
+                            {{ expense.category }}
+                        </span>
+                    </td>
+                    <td><small>{{ expense.get_payment_method_display }}</small></td>
+                    <td
+                        style="font-weight: 700; color: {% if expense.transaction_type == 'EXPENSE' %}var(--danger){% else %}var(--success){% endif %}; font-size: 1.125rem;">
+                        ${{ expense.amount }}
+                    </td>
+                    <td>
+                        <a href="{% url 'expense_update' expense.pk %}" class="btn btn-primary"
+                            style="padding: 0.5rem 1rem; font-size: 0.875rem;">Edit</a>
+                        <a href="{% url 'expense_delete' expense.pk %}" class="btn btn-danger"
+                            style="padding: 0.5rem 1rem; font-size: 0.875rem;">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="text-align: center; color: var(--gray); padding: 3rem;">
+            No expenses found. <a href="{% url 'expense_create' %}" style="color: var(--primary); font-weight: 600;">Add
+                your first expense</a>
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
